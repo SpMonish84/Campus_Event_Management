@@ -1,17 +1,13 @@
 #!/usr/bin/env python3
 """
-Simplified FastAPI application for Event Management System.
-Uses direct SQLite queries instead of SQLAlchemy for better compatibility.
+Minimal FastAPI application for Event Management System.
 """
 import sqlite3
 from pathlib import Path
 from typing import List, Dict, Any, Optional
-from datetime import datetime
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-
-from config import settings
 
 # Database configuration
 DATABASE_PATH = Path(__file__).parent.parent / "database" / "event_management_db.db"
@@ -19,8 +15,8 @@ DATABASE_PATH = Path(__file__).parent.parent / "database" / "event_management_db
 # FastAPI app
 app = FastAPI(
     title="Event Management System API",
-    description="Simplified FastAPI backend for event management with SQLite database",
-    version=settings.VERSION,
+    description="Minimal FastAPI backend for event management",
+    version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc"
 )
@@ -28,7 +24,7 @@ app = FastAPI(
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.BACKEND_CORS_ORIGINS,
+    allow_origins=["http://localhost:3000", "http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -308,10 +304,212 @@ async def get_statistics():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# Attendance endpoints
+@app.get("/attendance")
+async def get_attendance():
+    """Get all attendance records"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT a.attendance_id, a.registration_id, a.attended as status,
+                   a.check_in_time, r.student_id, r.event_id,
+                   s.name as student_name, e.title as event_title,
+                   r.registration_time
+            FROM Attendance a
+            JOIN Registrations r ON a.registration_id = r.registration_id
+            JOIN Students s ON r.student_id = s.student_id
+            JOIN Events e ON r.event_id = e.event_id
+            ORDER BY a.attendance_id DESC
+        """)
+        attendance = [row_to_dict(row) for row in cursor.fetchall()]
+        conn.close()
+        return {"data": attendance}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/attendance/{attendance_id}")
+async def get_attendance_record(attendance_id: int):
+    """Get a specific attendance record"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT r.registration_id, r.student_id, r.event_id, r.registration_date,
+                   s.name as student_name, e.title as event_title,
+                   CASE WHEN r.status = 'confirmed' THEN 1 ELSE 0 END as attended,
+                   r.registration_date as check_in_time
+            FROM Registrations r
+            LEFT JOIN Students s ON r.student_id = s.student_id
+            LEFT JOIN Events e ON r.event_id = e.event_id
+            WHERE r.registration_id = ?
+        """, (attendance_id,))
+        attendance = row_to_dict(cursor.fetchone())
+        conn.close()
+        
+        if not attendance:
+            raise HTTPException(status_code=404, detail="Attendance record not found")
+        
+        return attendance
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Feedback endpoints
+def check_database():
+    """Check database connection and table structure"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Check if database is writable
+        cursor.execute("PRAGMA quick_check")
+        check_result = cursor.fetchone()
+        print(f"Database check: {check_result[0]}")
+        
+        # Check if Feedback table exists and get its structure
+        cursor.execute("""
+            SELECT name FROM sqlite_master 
+            WHERE type='table' AND name='Feedback'
+        """)
+        feedback_table = cursor.fetchone()
+        
+        if not feedback_table:
+            print("Error: Feedback table does not exist")
+            return False, "Feedback table does not exist"
+            
+        # Get Feedback table structure
+        cursor.execute("PRAGMA table_info(Feedback)")
+        columns = cursor.fetchall()
+        print("\nFeedback table structure:")
+        for col in columns:
+            print(f"- {col[1]} ({col[2]}){' NOT NULL' if col[3] else ''} {col[5] or ''}")
+        
+        # Check if there's any data
+        cursor.execute("SELECT COUNT(*) FROM Feedback")
+        count = cursor.fetchone()[0]
+        print(f"\nFound {count} feedback records")
+        
+        conn.close()
+        return True, "Database check passed"
+        
+    except Exception as e:
+        error_msg = f"Database check failed: {str(e)}"
+        print(error_msg)
+        return False, error_msg
+
+@app.get("/feedback")
+async def get_feedback():
+    """Get all feedback records"""
+    try:
+        # First check the database
+        db_ok, db_message = check_database()
+        if not db_ok:
+            raise HTTPException(status_code=500, detail=db_message)
+            
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Simple query that matches the exact schema
+        cursor.execute("""
+            SELECT feedback_id, registration_id, rating, comments, submitted_at
+            FROM Feedback
+            ORDER BY submitted_at DESC
+        """)
+        
+        # Get column names from cursor description
+        columns = [column[0] for column in cursor.description]
+        
+        # Convert rows to list of dictionaries
+        rows = cursor.fetchall()
+        feedback = [dict(zip(columns, row)) for row in rows]
+        
+        print(f"Retrieved {len(feedback)} feedback records")
+        conn.close()
+        
+        return {"data": feedback}
+        
+    except sqlite3.Error as e:
+        error_msg = f"Database error: {str(e)}"
+        print(error_msg)
+        raise HTTPException(status_code=500, detail=error_msg)
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        error_msg = f"Unexpected error: {str(e)}\n{traceback.format_exc()}"
+        print(error_msg)
+        raise HTTPException(status_code=500, detail=error_msg)
+
+@app.get("/feedback/{feedback_id}")
+async def get_feedback_record(feedback_id: int):
+    """Get a specific feedback record"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # First, try to get the basic feedback record
+        try:
+            cursor.execute("""
+                SELECT f.feedback_id, f.registration_id, f.rating, f.comments, 
+                       f.submitted_at, r.student_id, r.event_id,
+                       s.name as student_name, e.title as event_title
+                FROM Feedback f
+                JOIN Registrations r ON f.registration_id = r.registration_id
+                JOIN Students s ON r.student_id = s.student_id
+                LEFT JOIN Events e ON r.event_id = e.event_id
+                WHERE f.feedback_id = ?
+            """, (feedback_id,))
+            
+            row = cursor.fetchone()
+            if not row:
+                raise HTTPException(status_code=404, detail="Feedback not found")
+                
+            feedback = {
+                'feedback_id': row[0],
+                'registration_id': row[1],
+                'rating': row[2],
+                'comments': row[3],
+                'submitted_at': row[4],
+                'student_id': row[5],
+                'event_id': row[6],
+                'student_name': row[7],
+                'event_title': row[8] if len(row) > 8 else None
+            }
+            
+        except sqlite3.Error:
+            # If the join fails, try a simpler query
+            cursor.execute("""
+                SELECT feedback_id, registration_id, rating, comments, submitted_at
+                FROM Feedback
+                WHERE feedback_id = ?
+            """, (feedback_id,))
+            
+            row = cursor.fetchone()
+            if not row:
+                raise HTTPException(status_code=404, detail="Feedback not found")
+                
+            feedback = {
+                'feedback_id': row[0],
+                'registration_id': row[1],
+                'rating': row[2],
+                'comments': row[3],
+                'submitted_at': row[4]
+            }
+        
+        conn.close()
+        return feedback
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error in /feedback/{{feedback_id}}: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 if __name__ == "__main__":
     import uvicorn
     print(f"🚀 Starting Event Management System API")
     print(f"📁 Database: {DATABASE_PATH}")
-    print(f"🌐 API Docs: http://localhost:8000/docs")
-    uvicorn.run(app, host="0.0.0.0", port=8000)
-
+    print(f"🌐 API Docs: http://127.0.0.1:8000/docs")
+    uvicorn.run(app, host="127.0.0.1", port=8000, reload=True)

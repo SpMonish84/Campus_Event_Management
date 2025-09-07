@@ -2,127 +2,150 @@
 
 A comprehensive event management system designed for educational institutions to manage campus events, student registrations, and administrative tasks.
 
-## 🚧 Project Status
-
-**Current Status**: Database design and backend implementation completed, UI development in progress.
-
 ### ✅ Completed Components
-- **Database Design**: Complete SQLite database with comprehensive schema
-- **Backend API**: Full REST API implementation with FastAPI
-- **Authentication**: Student and teacher authentication systems
-- **Core Features**: Event management, registration, attendance tracking
-- **Multi-College Support**: Scalable architecture for multiple institutions
+- **Database**: Robust SQLite database with comprehensive schema
+- **Backend API**: Complete REST API with FastAPI
+- **Core Features**:
+  - Multi-tenant college management
+  - Event management and registration
+  - Attendance tracking
+  - User authentication
+  - Feedback system
 
-### 🔄 In Progress
-- **Frontend UI**: React-based user interface (partially implemented)
-- **UI Polish**: Complete responsive design and user experience
 
 ## 🏗️ Architecture
 
 ### Backend (Python/FastAPI)
+- **Framework**: FastAPI with Python 3.8+
 - **Database**: SQLite with comprehensive schema
-- **API**: RESTful endpoints for all operations
-- **Authentication**: JWT-based authentication
-- **Features**: Event management, registration, attendance, feedback, reporting
+- **API**: RESTful endpoints with OpenAPI documentation
+- **Key Features**:
+  - Multi-tenant architecture
+  - Event lifecycle management
+  - Role-based access control
+  - Data validation with Pydantic
 
 ### Frontend (React/TypeScript)
-- **Framework**: React with TypeScript
-- **Styling**: Tailwind CSS
-- **State Management**: React hooks
-- **Components**: Modular UI components
+- **Framework**: React 18 with TypeScript
+- **Styling**: Tailwind CSS 3.0+
+- **State Management**: React Context API
+- **Routing**: React Router v6
+- **Build Tool**: Vite
 
 ### Database Schema
-- **Colleges**: Multi-tenant support
-- **Users**: Students, teachers, admins
-- **Events**: Comprehensive event management
-- **Registrations**: Student event participation
-- **Attendance**: Event attendance tracking
-- **Feedback**: Event feedback system
+- **Colleges**: Multi-tenant support with status tracking
+- **Users**: Students, teachers, and administrators
+- **Events**: Full event lifecycle management
+- **Registrations**: Student enrollment tracking
+- **Attendance**: Comprehensive attendance system
+- **Feedback**: Event feedback and ratings
 
 ## 🚀 Quick Start
 
+### Prerequisites
+- Python 3.8+
+- Node.js 16+
+- SQLite3
+
 ### Backend Setup
 ```bash
-cd backend
+# Clone the repository
+git clone https://github.com/SpMonish84/Campus_Event_Management.git
+cd Campus_Event_Management/backend
+
+# Install dependencies
 pip install -r requirements.txt
-python main.py
+
+# Start the backend server
+uvicorn simple_main:app 
+# or use the batch file on Windows
+# .\start_backend.bat
 ```
 
 ### Frontend Setup
 ```bash
+# From the project root
 cd frontend
+
+# Install dependencies
 npm install
+
+# Start the development server
 npm run dev
 ```
 
 ### Database
-The SQLite database is included with sample data and can be found in the `database/` directory.
+- The SQLite database is automatically created in the `database/` directory
+- Sample data can be loaded using the `add_sample_data.py` script
 
 ## 📁 Project Structure
-
 ```
-├── backend/                 # FastAPI backend
-│   ├── routers/            # API route handlers
-│   ├── models.py           # Database models
-│   ├── schemas.py          # Pydantic schemas
-│   └── main.py             # Application entry point
-├── frontend/               # React frontend
-│   ├── src/
-│   │   ├── components/     # UI components
-│   │   ├── pages/          # Page components
-│   │   └── services/       # API services
-├── database/               # SQLite database files
-└── README.md              # This file
+.
+├── backend/                    # FastAPI backend
+│   ├── src/                   # Source code
+│   ├── start_server.py        # Server startup script
+│   ├── requirements.txt       # Python dependencies
+│   └── add_sample_data.py     # Database seeding script
+│
+├── frontend/                  # React frontend
+│   ├── public/               # Static assets
+│   └── src/                  # Source code
+│       ├── components/       # Reusable UI components
+│       ├── contexts/         # React contexts
+│       ├── pages/            # Page components
+│       └── services/         # API services
+│
+├── database/                  # Database files
+│   ├── event_management.db   # SQLite database
+│   └── fix_database.sql      # Database schema
+│
+├── .gitignore
+└── README.md                 # This file
 ```
 
 ## 🔧 Features
 
 ### For Students
-- Event browsing and registration
-- Personal dashboard
-- Attendance tracking
-- Feedback submission
+- 📅 Browse and register for events
+- 📊 View personal event calendar
+- ✅ Track attendance history
+- 💬 Submit event feedback
+- 👤 Manage personal profile
 
 ### For Teachers
-- Event creation and management
-- Student registration management
-- Attendance tracking
-- Analytics and reports
+- 🎯 Create and manage events
+- 👥 Manage student registrations
+- 📝 Take attendance
+- 📈 View event analytics
+- 📤 Export attendance reports
 
 ### For Administrators
-- Multi-college management
-- User management
-- System analytics
-- Data export capabilities
+- 🏫 Multi-college management
+- 👥 User role management
+- 📊 System analytics dashboard
+- ⚙️ System configuration
+- 🔄 Database maintenance tools
 
-## 📊 Database Features
+## 🗃️ Database Features
 
-- **Multi-tenant architecture** for multiple colleges
-- **Comprehensive constraints** for data integrity
-- **Automated triggers** for data validation
-- **Scalable design** for large institutions
+- **Multi-tenant Architecture**: Support for multiple colleges with data isolation
+- **Data Integrity**: Comprehensive constraints and validations
+- **Automation**: Triggers for maintaining data consistency
+- **Performance**: Indexed queries for fast data retrieval
+- **Backup & Recovery**: Easy backup and restore functionality
 
-## 🛠️ Development Notes
+### Development Setup
+1. Set up Python virtual environment:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: .\venv\Scripts\activate
+   pip install -r backend/requirements.txt
+   ```
 
-The project follows modern development practices:
-- Clean code architecture
-- Comprehensive error handling
-- Database optimization
-- API documentation
-- Modular frontend components
+2. Install frontend dependencies:
+   ```bash
+   cd frontend
+   npm install
+   ```
 
-## 📝 Next Steps
-
-1. Complete frontend UI implementation
-2. Add responsive design
-3. Implement advanced analytics
-4. Add mobile app support
-5. Deploy to production
-
-## 🤝 Contributing
-
-This project is currently in active development. The database and backend are production-ready, with the frontend UI being the primary focus for completion.
-
----
-
-**Repository**: [https://github.com/SpMonish84/Campus_Event_Management](https://github.com/SpMonish84/Campus_Event_Management)
+**Repository**:(https://github.com/SpMonish84/Campus_Event_Management)

@@ -1,31 +1,13 @@
 # Event Management System API
 
-A comprehensive FastAPI backend for an event management system with SQLite database integration. This system manages colleges, students, events, registrations, attendance, and feedback.
+A minimal FastAPI backend for an event management system with SQLite database integration. This system manages colleges, students, events, and registrations.
 
 ## Project Structure
 
 ```
 backend/
-├── simple_main.py       # Main FastAPI application (recommended)
-├── main.py              # SQLAlchemy-based FastAPI application
-├── config.py            # Configuration settings
-├── database.py          # Database connection and session management
-├── models.py            # SQLAlchemy database models
-├── schemas.py           # Pydantic schemas for request/response validation
+├── simple_main.py       # Main FastAPI application
 ├── requirements.txt     # Python dependencies
-├── test_db.py          # Database connection test script
-├── examine_db.py       # Database structure examination script
-├── run.py              # Startup script
-├── routers/
-│   ├── __init__.py
-│   ├── colleges.py      # College management endpoints
-│   ├── admins.py        # Admin management endpoints
-│   ├── students.py      # Student management endpoints
-│   ├── events.py        # Event management endpoints
-│   ├── event_types.py   # Event type management endpoints
-│   ├── registrations.py # Registration management endpoints
-│   ├── attendance.py    # Attendance management endpoints
-│   └── feedback.py      # Feedback management endpoints
 └── README.md           # This file
 
 database/
@@ -54,26 +36,20 @@ The database contains the following tables:
 
 ```bash
 cd backend
-pip install fastapi uvicorn sqlalchemy pydantic python-multipart
+pip install -r requirements.txt
 ```
 
 ### 2. Run the Application
 
-**Recommended (Simple Version):**
 ```bash
-python simple_main.py
-```
-
-**Alternative (SQLAlchemy Version):**
-```bash
-python main.py
+uvicorn simple_main:app
 ```
 
 ### 3. Access the API
 
-- **API Base URL**: http://localhost:8000
-- **Interactive API Docs**: http://localhost:8000/docs
-- **Health Check**: http://localhost:8000/health
+- **API Base URL**: http://127.0.0.1:8000
+- **Interactive API Docs**: http://127.0.0.1:8000/docs
+- **Health Check**: http://127.0.0.1:8000/health
 
 ## API Endpoints
 
@@ -106,22 +82,22 @@ python main.py
 
 ### Get System Health
 ```bash
-curl http://localhost:8000/health
+curl http://127.0.0.1:8000/health
 ```
 
 ### Get All Event Types
 ```bash
-curl http://localhost:8000/event-types
+curl http://127.0.0.1:8000/event-types
 ```
 
 ### Get All Events
 ```bash
-curl http://localhost:8000/events
+curl http://127.0.0.1:8000/events
 ```
 
 ### Get System Statistics
 ```bash
-curl http://localhost:8000/stats
+curl http://127.0.0.1:8000/stats
 ```
 
 ## Database Schema
@@ -168,19 +144,14 @@ curl http://localhost:8000/stats
 
 ## Quick Start
 
-1. **Test Database Connection:**
+1. **Start the API Server:**
    ```bash
-   python test_db.py
+   uvicorn simple_main:app
    ```
 
-2. **Start the API Server:**
-   ```bash
-   python simple_main.py
-   ```
-
-3. **Access the API:**
-   - Open http://localhost:8000/docs for interactive API documentation
-   - Use http://localhost:8000/health to check system status
+2. **Access the API:**
+   - Open http://127.0.0.1:8000/docs for interactive API documentation
+   - Use http://127.0.0.1:8000/health to check system status
 
 ## Features
 
@@ -213,11 +184,12 @@ curl http://localhost:8000/stats
 - Run `python test_db.py` to verify connection
 
 ### Port Already in Use
-If port 8000 is already in use, modify the port in `simple_main.py`:
-```python
-uvicorn.run(app, host="0.0.0.0", port=8001)
+If port 8000 is already in use, you can specify a different port:
+```bash
+uvicorn simple_main:app --port 8001
 ```
 
-### Python Version Compatibility
-- Use `simple_main.py` for better compatibility
-- The SQLAlchemy version may have issues with Python 3.13
+### Starting with Custom Host/Port
+```bash
+uvicorn simple_main:app --host 127.0.0.1 --port 8000
+```
